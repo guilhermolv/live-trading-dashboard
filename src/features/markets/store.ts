@@ -6,6 +6,7 @@ type Point = { time: string; price: number };
 
 type MarketState = {
   assets: Record<string, Asset>;
+  assetList: Asset[];
   history: Record<string, Point[]>;
   trades: Trade[];
   favourites: string[];
@@ -20,28 +21,39 @@ export const useMarketStore = create<MarketState>()(
   persist(
     (set, get) => ({
       assets: {},
+      assetList: [],
       history: {},
       trades: [],
       favourites: ['BTC', 'ETH'],
       paused: false,
       hydrate: (assets) =>
-        set((state) => ({
-          assets: { ...state.assets, ...Object.fromEntries(assets.map((asset) => [asset.symbol, asset])) },
-          history: {
+        set((state) => {
+          const nextAssets = { ...state.assets, ...Object.fromEntries(assets.map((asset) => [asset.symbol, asset])) };
+
+          return {
+            assets: nextAssets,
+            assetList: Object.values(nextAssets),
+            history: {
             ...state.history,
             ...Object.fromEntries(assets.map((asset) => [asset.symbol, state.history[asset.symbol] ?? [{ time: 'open', price: asset.price }]])),
-          },
-        })),
+            },
+          };
+        }),
       applyTick: (tick) => {
         if (get().paused) return;
-        set((state) => ({
-          assets: { ...state.assets, [tick.asset.symbol]: tick.asset },
-          history: {
+        set((state) => {
+          const nextAssets = { ...state.assets, [tick.asset.symbol]: tick.asset };
+
+          return {
+            assets: nextAssets,
+            assetList: Object.values(nextAssets),
+            history: {
             ...state.history,
             [tick.asset.symbol]: [...(state.history[tick.asset.symbol] ?? []), { time: new Date(tick.createdAt).toLocaleTimeString(), price: tick.asset.price }].slice(-24),
-          },
-          trades: [tick.trade, ...state.trades].slice(0, 12),
-        }));
+            },
+            trades: [tick.trade, ...state.trades].slice(0, 12),
+          };
+        });
       },
       toggleFavourite: (symbol) =>
         set((state) => ({

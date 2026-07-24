@@ -12,7 +12,7 @@ const queryClient = new QueryClient();
 function Dashboard() {
   const { isLoading, isError, error } = useAssets();
   const status = useMarketSocket();
-  const assets = useMarketStore((state) => Object.values(state.assets));
+  const assets = useMarketStore((state) => state.assetList);
   const history = useMarketStore((state) => state.history);
   const trades = useMarketStore((state) => state.trades);
   const favourites = useMarketStore((state) => state.favourites);
