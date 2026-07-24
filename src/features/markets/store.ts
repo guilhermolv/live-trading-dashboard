@@ -43,6 +43,7 @@ export const useMarketStore = create<MarketState>()(
         if (get().paused) return;
         set((state) => {
           const nextAssets = { ...state.assets, [tick.asset.symbol]: tick.asset };
+          const nextTrades = [tick.trade, ...state.trades.filter((trade) => trade.id !== tick.trade.id)].slice(0, 12);
 
           return {
             assets: nextAssets,
@@ -51,7 +52,7 @@ export const useMarketStore = create<MarketState>()(
             ...state.history,
             [tick.asset.symbol]: [...(state.history[tick.asset.symbol] ?? []), { time: new Date(tick.createdAt).toLocaleTimeString(), price: tick.asset.price }].slice(-24),
             },
-            trades: [tick.trade, ...state.trades].slice(0, 12),
+            trades: nextTrades,
           };
         });
       },
